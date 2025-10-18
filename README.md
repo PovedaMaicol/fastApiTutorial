@@ -72,4 +72,4 @@ Este proyecto está bajo la Licencia MIT.
 
 ## 📧 Contacto
 
-[Tu nombre] - [tu-email@ejemplo.com]
+Maicol - stivsal12@gmail.com
