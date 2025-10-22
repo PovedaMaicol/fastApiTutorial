@@ -1,8 +1,10 @@
+import datetime
 from fastapi import FastAPI, Body
 from fastapi.responses import HTMLResponse
-from pydantic import BaseModel 
+from pydantic import BaseModel, Field 
 from typing import Optional, List
 
+# pydantic es para manejo de errores
 app = FastAPI()
 
 
@@ -20,25 +22,29 @@ class MovieUpdate(BaseModel):
     year: int
     rating: float
     category: str
-
-movies = [
-    {
-        "id": 1, 
-        "title": "The Shawshank Redemption", 
-        "overview": "Two imprisoned men",
-        "year": 1994,
-        "rating": 9.3,
-        "category": "Drama"
-    },
-      {
-        "id": 2, 
-        "title": "Optra automatico", 
-        "overview": "A car that drives itself",
-        "year": 1992,
-        "rating": 9.3,
-        "category": "Acción"
+    
+class MovieCreate(BaseModel):
+    id: int
+    title: str = Field(min_length=5, max_length=15, default="movie")
+    overview: str = Field(min_length=15, max_length=50, default="Este es un overview")
+    year: int = Field(le=datetime.date.today().year, ge=1900, default=2023)
+    rating: float = Field(ge=0, le=10, default=10)
+    category: str = Field(min_length=5, max_length=20, default="category")
+    
+    model_config = {
+        'json_schema_extra':{
+            'example': {
+                'id': 3,
+                'title': 'Movie Example',
+                'overview': 'This is an example overview for a movie.',
+                'year': 2023,
+                'rating': 8.5,
+                'category': 'Drama'
+            }
+        }
     }
-]
+
+movies: List[Movie] = []
 
 app.title = "Mi primera API con FastAPI"
 app.version = "2.0.0"
@@ -50,27 +56,28 @@ def home():
 
 @app.get("/movies", tags=["Movies"])
 def get_movies() -> List[Movie]:
-    return movies
+    return [movie.model_dump() for movie in movies]
+
 
 
 @app.get("/movies/{id}", tags=["Movies"])
 def get_movie(id: int) -> Movie:
     for movie in movies:
         if movie["id"] == id:
-            return movie
+            return movie.model_dump()
     return []
 
 @app.get('/movies/', tags=["Movies"])
 def get_movie_by_category(category: str, year: int) -> Movie:
     for movie in movies:
         if movie['category'] == category:
-            return movie
+            return movie.model_dump()
     return []
 
 @app.post("/movies", tags=["Movies"])
-def create_movie(movie: Movie):
-    movies.append(movie.model_dump())
-    return movies
+def create_movie(movie: MovieCreate) -> List[Movie]:
+    movies.append(movie)
+    return [movie.model_dump() for movie in movies]
 
 @app.put('/movies/{id}', tags=["Movies"])
 def update_movie(
@@ -83,7 +90,7 @@ def update_movie(
             item["year"] = movie.year
             item["rating"] = movie.rating
             item["category"] = movie.category
-            return movies
+            return [movie.model_dump() for movie in movies]
     return []
     
     
@@ -92,4 +99,4 @@ def delete_movie(id: int) -> List[Movie]:
     for movie in movies:
         if movie["id"] == id:
             movies.remove(movie)
-            return movies
+            return [movie.model_dump() for movie in movies]
