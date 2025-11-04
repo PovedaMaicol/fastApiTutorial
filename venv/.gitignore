@@ -1,0 +1,30 @@
+# Created by venv; see https://docs.python.org/3/library/venv.html
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Virtual environments
+venv/
+ENV/
+env/
+
+# Python config
+.Python
+
+# IDEs / Editors
+.vscode/
+.idea/
+
+# Environment variables
+.env
+.env.local
+
+# Logs and temporary files
+*.log
+*.pot
+*.pyc
+*.pyo
+*.pyd
+*.sqlite3
