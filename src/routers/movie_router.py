@@ -16,20 +16,20 @@ def get_movies() -> List[Movie]:
     return JSONResponse(content=content, status_code=200)
 
 
-@movie_router.get("/{id}", tags=["Movies"])
-def get_movie(id: int = Path(ge=0)) -> Movie | dict:
+@movie_router.get("/by_category", tags=["Movies"])
+def get_movie_by_category(
+    category: str = Query(min_length=3, max_length=20)
+) -> Movie | dict:
     for movie in movies:
-        if movie.id == id:
+        if movie.category == category:
             return JSONResponse(content=movie.model_dump(), status_code=200)
     return JSONResponse(content={}, status_code=404)
 
 
-@movie_router.get("/by_category", tags=["Movies"])
-def get_movie_by_category(
-    category: str = Query(min_length=5, max_length=20)
-) -> Movie | dict:
+@movie_router.get("/{id}", tags=["Movies"])
+def get_movie(id: int = Path(ge=0)) -> Movie | dict:
     for movie in movies:
-        if movie.category == category:
+        if movie.id == id:
             return JSONResponse(content=movie.model_dump(), status_code=200)
     return JSONResponse(content={}, status_code=404)
 
