@@ -8,23 +8,27 @@ from fastapi.responses import (
 from src.routers.movie_router import movie_router
 from src.utils.http_error_handler import HTTPErrorHandler
 
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
+import os
 
-# pydantic es para manejo de errores
 app = FastAPI()
 
 
-# app.add_middleware(HTTPErrorHandler)
-@app.middleware('http')
-async def http_error_handler(request: Request, call_next) -> Response | JSONResponse:
-    print("Middleware activated")
-    return await call_next(request)
+app.add_middleware(HTTPErrorHandler)
+
+static_path = os.path.join(os.path.dirname(__file__), 'static/')
+templates_path = os.path.join(os.path.dirname(__file__), 'templates/')
+
+app.mount('/static', StaticFiles(directory=static_path), name='static')
+templates = Jinja2Templates(directory=templates_path)
 
 app.title = "Mi primera API con FastAPI"
 app.version = "2.0.0"
 
 
 @app.get('/', tags=['Home'])
-def home():
-    return PlainTextResponse(content="Home", status_code=200)
+def home(request: Request):
+    return templates.TemplateResponse('index.html', { 'request': request, 'message': 'Hello World', })
 
 app.include_router(prefix='/movies', router=movie_router)
