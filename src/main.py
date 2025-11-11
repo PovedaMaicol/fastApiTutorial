@@ -7,17 +7,28 @@ from src.utils.http_error_handler import HTTPErrorHandler
 from typing import Annotated
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 import os
+from typing import Annotated
+from fastapi.exceptions import HTTPException
+from jose import jwt
 
 def dependecy1():
     print("Ejecutando dependencia 1")
     
 def dependency2():
     print("Ejecutando dependencia 2")
+    
 app = FastAPI(dependencies=[Depends(dependecy1), Depends(dependency2)])
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
+users = {
+    "pablo": {"username": "pablo", "password": "1234", "email": "pab@gmail.com"},
+    "juan": {"username": "juan", "password": "abcd", "email": "user@gmail.com"},
+}
 
 app.add_middleware(HTTPErrorHandler)
+
 
 static_path = os.path.join(os.path.dirname(__file__), "static/")
 templates_path = os.path.join(os.path.dirname(__file__), "templates/")
@@ -38,6 +49,28 @@ class CommonDep:
     def __init__(self, start_date: str, end_date: str) -> None:
         self.start_date = start_date
         self.end_date = end_date
+
+def encode_token(payload: dict) -> str:
+    token = jwt.encode(payload, "my-secret", algorithm="HS256")
+    return token
+
+def decode_token(token: Annotated[str, Depends(oauth2_scheme)]) -> dict:
+    data = jwt.decode(token, "my-secret", algorithms=["HS256"])
+    user = user.get(data["username"])
+    return user
+
+
+@app.post("/token")
+def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()]):
+    user = users.get(form_data.username)
+    if not user or form_data.password != user["password"]:
+        raise HTTPException(status_code=400, detail="Incorrect username or password")
+    token = encode_token({"username": user["username"], "email": user["email"]})
+    return { "access_token": token, "token_type": "bearer" }
+
+@app.get("/users/profile")
+def profile(my_user: Annotated[dict, Depends(decode_token)]):
+    return my_user
 
 
 @app.get("/", tags=["Home"])
