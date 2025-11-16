@@ -1,6 +1,7 @@
-from fastapi import FastAPI, Depends, Header, Request, Response
+from fastapi import FastAPI, Depends, Header, Request, Cookie
 from fastapi.params import Query
 from fastapi.requests import Request
+from fastapi.responses import JSONResponse
 from src.routers.movie_router import movie_router
 from src.utils.http_error_handler import HTTPErrorHandler
 from typing import Annotated
@@ -107,5 +108,15 @@ def get_users(commons: CommonDep = Depends()):
 def get_customers(commons: CommonDep = Depends()):
     return f"Customers created between {commons.start_date} and {commons.end_date}"
 
+## Cookies
+@app.get("/set-cookie")
+def root():
+    response = JSONResponse(content={"message": "Cookie set successfully"})
+    response.set_cookie(key="username", value="maiky")
+    return response
+
+@app.get("/get-cookie")
+def get_cookie(username: Annotated[str, Cookie()]):
+    return username
 
 app.include_router(prefix="/movies", router=movie_router)
